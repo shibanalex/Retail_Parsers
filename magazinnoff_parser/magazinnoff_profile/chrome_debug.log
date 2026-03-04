@@ -1,0 +1,10 @@
+[11572:14004:0302/142836.613:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:225] No machine level policy manager exists.
+[14212:12528:0302/142836.737:ERROR:ui\gl\direct_composition_support.cc:614] AMD VideoProcessorGetOutputExtension failed: Неопознанная ошибка (0x80004005)
+[14212:1416:0302/142837.055:WARNING:ui\gl\angle_platform_impl.cc:52] HLSLCompiler.cpp:254 (rx::HLSLCompiler::compileToBinary): 
+C:\fakepath(156,3-70): warning X3557: loop only executes for 1 iteration(s), forcing loop to unroll
+
+[11572:14004:0302/142837.508:INFO:CONSOLE:0] "Manifest fetch from https://www.magazinnoff.ru/icons/manifest.json failed, code 404", source: https://www.magazinnoff.ru/ (0)
+[11572:14004:0302/142837.653:INFO:CONSOLE:0] "Manifest fetch from https://www.magazinnoff.ru/icons/manifest.json failed, code 404", source: https://www.magazinnoff.ru/ (0)
+[12600:14352:0302/142837.909:INFO:third_party\blink\renderer\modules\peerconnection\peer_connection_dependency_factory.cc:916] Running WebRTC with a combined Network and Worker thread.
+[2696:10172:0302/142838.513:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
+[2696:10172:0302/142838.513:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
