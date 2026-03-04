@@ -2,7 +2,7 @@ import time
 import requests
 import config
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from utils import update_retail_points
+from parsers_core.utils import update_retail_points
 from .browser import init_driver, wait_for_antibot
 from .html_parser import transliterate_city, parse_shops_list, parse_products_page, get_max_page, get_category_from_html
 
