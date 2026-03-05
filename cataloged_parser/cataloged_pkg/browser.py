@@ -61,7 +61,7 @@ def wait_for_antibot(driver, timeout=40):
                 buttons = driver.find_elements(By.XPATH, "//div[contains(text(), 'Я не робот')]")
                 for btn in buttons:
                     if btn.is_displayed():
-                        print("   🤖 Нажимаю кнопку 'Я не робот'...")
+                        print("   Защита пройдена успешно")
                         driver.execute_script("arguments[0].click();", btn)
                         time.sleep(2)
                         break
