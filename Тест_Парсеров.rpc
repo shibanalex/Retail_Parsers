@@ -1,0 +1,193 @@
+comment = [
+"I Рынок молочки 37 Ok/Лента/Перекресток/РИАТ"
+]    
+
+emoji_agent = "🐮"			# default "🥷"
+
+# Если указаны то отразятся в имени выходных файлов Excel SQLite   
+client_name = "TM"			#  Клиент 
+brief = "001"				#  № заявки Брифа
+
+# Включение отладочного режима !
+# куча print'ов  и .debug\parser\ xxxx.json 
+debug_mode = False			# default False
+#debug_mode = True			# default False
+
+
+#  Использовать True / False  или нет Словарь ассоциаций товара по категориям
+#  Молок =  Молочные продукты
+#  Молоко сгущеное = Консервы 
+#  Птичье молоко = контитерка
+# -Сценарий 1: use_assoc=True, auto_enrich=True		Парсер → Сырые данные → Ассоциации → Обогащение → MCR_ файл
+# -Сценарий 2: use_assoc=True, auto_enrich=False	Парсер → Сырые данные → Ассоциации → MDR_ файл (как раньше)
+# -Сценарий 3: use_assoc=False, auto_enrich=False	Парсер → Сырые данные → MDR_ файл
+#	Три согласованных режима работы:
+#	    debug_mode=True: Все технические поля data_enricher
+#	    assoc_debug=True: Основные + поля категорий (для отладки ассоциаций)
+#	    Оба False: Только production поля для КП
+use_assoc = True			# default True
+assoc_debug = False			# Выключатель Debug для ассоциаций  default False
+assoc_auto_train = True			# default True   Выключатель Автоматического обучения словаря
+auto_enrich = True  			# Включить обогащение 		default True
+auto_enrich_existing = False		# Обогащать существующие MDR_  	default False
+remove_mdr_after_enrich = False		# Удалять MDR_ после обогащения default False
+
+
+#  frequency	🧠 ЧТО ОЗНАЧАЮТ ЗНАЧЕНИЯ 
+#   Значение	Поведение Scheduler
+#	-1	❌ Отключён — сценарий НИКОГДА не запускается
+#	0	🔁 Каждый проход Scheduler (несколько раз в день)
+#	1	🕒 Раз в день
+#	7	📅 Раз в 7 дней (неделя)
+#	30	🗓 Раз в месяц (условно)
+frequency = 7
+
+#  block_time  	⏰ Время блокировки: 23:00–06:30 (через полночь — поддерживается)
+#  		📅 Дни: только будни
+#		🧠 reason: человеко-читаемая причина (идёт в лог и Telegram)
+#		Если days не указаны → блок действует каждый день.
+#		Если block_time отсутствует → RPC всегда разрешён.
+block_time: {
+  "from": "03:00",
+  "to":   "06:30",
+  "days": ["mon", "tue", "wed", "thu", "fri"],
+  "reason": "Антибот / ночные баны Ленты",
+}
+
+
+#                f"📦 Записей: {len(parser_data)}\n"
+#                f"🏙️ Города: {len(cities)} | 🏪 Торг Точек: {tt_count} \n"
+#                f"🏷️ Бренды: {len(brands)} | 🛒 Товары: {len(products)}\n"
+#                f"🔎 Запросы: {len(queries)}\n"
+
+#  cities 	🏙️ Список городов 
+cities = [
+   "Иваново",
+#    "Фурманов",
+#    "Родники",
+#    "Шуя",
+#    "Кострома",
+#    "Самара",
+#    "Тольятти",
+#         "Вологда",
+#         "Архангельск",
+]
+
+search_req = [
+     "молоко",
+     "Кефир",
+     "Ряженка",
+     "Варенец",
+     "Катык",
+     "Снежок",
+     "Сметана",
+     "Сливки",
+     "Творог",
+     "Творожный крем",
+     "Масло",	
+     "Десерт",
+     "Йогурт",
+     "Сырок",
+     "сывороточный",
+     "Молочный коктейль",
+    # "Вино сух",
+    # "Виски",
+    #      "Колбас",
+    #      "Сосис",
+ ]
+
+brand = [
+#    "Тольяттимолоко",
+#    "Молоковье",
+#    "Пестравка",
+#    "Домашкино",
+#     "Домик в деревне",
+#    "Купино",
+#    "Ласкава",
+#    "Румелко",
+ ]
+
+my_ip = []
+
+TelegramBot = {
+    "TOKEN": "7464704844:AAErV72XLVnlvkQX1qRuITFkfMN7VYSaXww",
+    "CHAT_ID": "786185421",
+    "send": True,
+    "MY_ID": "Pars_II",
+}
+
+
+parsers = {
+#    "https://auchan.ru/": "Ашан",
+    "https://okeydostavka.ru/": "OKey",
+    "https://lenta.com/": "Лента",
+#    "https://metro-cc.ru/": "Метро",
+#    "https://myspar.ru/": "СПАР",
+    "https://perekrestok.ru/": "Перекресток",
+#    "https://online.globus.ru": "Глобус",
+#    "https://bristol.ru/": "Бристоль",
+#    "https://magnit.ru/": "Магнит",
+#    "https://5ka.ru/": "Пятерочка",
+#    "https://chizhik.club/": "Чижик",
+#    "https://krasnoeibeloe.ru/": "К&Б",
+#    "https://vliga.com": "Высшая Лига",
+    "https://riat-market.ru/": "Риат",
+#    "https://dixy.ru/": "Дикси",
+#    "https://svetoforonline.ru/": "Светофор",	
+#    "https://smart.swnn.ru/": "Smart",
+#    "https://maxi-retail.ru/": "Maxi",
+#    "https://magazinnoff.ru/": "Агригатор",
+    "https://magnit.ru/": "Магнит",
+}
+
+# bristol settings
+refresh_bristol_shops = False
+bristol_search_req = [
+#     "молоко 2.5",
+#     "масло 82",
+#         "Вино белое сух",
+#	 "Грюнер",
+#         "Cremant",
+#         "Prosecco",
+#    "Простоквашино",
+]
+
+
+
+#  Указанный путь к SQLite БД с proxy - включает работу через список proxy серверов
+#  поле	busy =  0  → свободен, можно использовать
+# 	busy =  1  → временно занят (TTL освободит автоматически)
+# 	busy = -1  → 🔒 MANUAL OFF (никогда не используется, не трогается кодом)
+#proxy = []							# соединения через Proxy  Отключены
+#proxy = "./proxys.db"						# Локальная БД с адресами Proxy серверов
+proxy = "P:/_SrvShare_/proxys.db"				# Сетевая  БД с адресами Proxy серверов
+try_fall = 3							# Количество немедленных попыток для каждого парсера (0, 1, 2, 3...)
+
+retry_wave = True  						# Включить повторную волну для упавших парсеров ! Упавший меняет proxy и пытается парсить снова. итак count_retry_wave  раз
+retry_wave_delay = 30  						# Пауза между волнами (попытками) в секундах  default = 30
+count_retry_wave = 3						# Кол-во повторений для механизма "Вторая волна" - добавляет упавшие в конец списка и повторяет их retry_wave раз def =2
+
+
+#db_retail_map = "./output/DB_Retail_Points_MAP.xlsx"		# Путь в файлу знаний количества ТТ Ретейла
+db_retail_map = "P:/_SrvShare_/DB_Retail_Points_MAP.xlsx"	# Сетевой Путь в файлу знаний количества ТТ Ретейла
+path_rules = "P:/_SrvShare_/rules.yaml" 			# Сетевой путь к базе ассоциаций категорий! По умолчанию локальный  "./Parsers/_associations/data/rules.yaml"
+path_assoc = "P:/_SrvShare_/associations.db"  			# Сетевой путь к базе ассоциаций товаров  ! По умолчанию локальный "./Parsers/_associations/data/associations.db"
+sqlite_file = "./output/SKU_TM_AllMilk_37.db"			# SQLite версия Выходного файла 
+table_name = "./output/SKU_TM_AllMilk_37"			# Excel  версия Выходного файла
+
+#============================================
+# Настройки SQL сервера 
+#============================================
+SQL = {
+#    "port": 5432,   	-  Будет Работать запись в Postgree
+#    "port": 4534,	-  НЕ Будет писать в Postgree
+
+    "host": "192.168.20.9",
+    "port": 5432,
+#     "port": 4534,
+    "user": "postgres",
+    "password": "Qq123456789",
+    "TABLE_Draft": "retail_draft",
+    "DB_Draft": "retail_draft",
+    "DB_Work": "retail_work",	
+}
