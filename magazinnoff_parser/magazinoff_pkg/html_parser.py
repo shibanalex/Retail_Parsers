@@ -3,9 +3,7 @@ from bs4 import BeautifulSoup
 
 BASE_URL = "https://www.magazinnoff.ru"
 
-
 def transliterate_city(city_name):
-    """Транслитерация для URL (Нижний Новгород -> nizhniy-novgorod)"""
     symbols = {
         'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'e',
         'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
@@ -17,44 +15,51 @@ def transliterate_city(city_name):
     result = ''.join(symbols.get(c, c) for c in city_name.lower())
     return re.sub(r'-+', '-', result).strip('-')
 
-
-def parse_stores(html, target_names=None):
-    """Извлекает список магазинов со страницы города"""
+def parse_stores(html, city_name, target_names=None):
     soup = BeautifulSoup(html, "lxml")
     found_stores = {}
 
-    links = soup.find_all("a", href=True)
-    for a in links:
+    for a in soup.find_all("a", href=True):
         href = a.get("href", "")
-        # Ищем ссылки вида /magazin/{slug}
         if href.startswith("/magazin/"):
             parts = href.split("/")
             if len(parts) >= 3:
                 store_slug = parts[2]
-                if store_slug in ["search", "map"]: continue  # Игнор служебных
+                if store_slug in ["search", "map"]: continue
 
                 name_tag = a.find("h3")
-                store_real_name = name_tag.text.split(" в ")[0].strip() if name_tag else store_slug.capitalize()
+                raw_name = name_tag.text.strip() if name_tag else store_slug.capitalize()
 
-                if not target_names:
-                    found_stores[store_slug] = store_real_name
-                else:
+                clean_name = re.sub(r'(?i)^акции\s+', '', raw_name)
+                clean_name = re.sub(rf'(?i)\s+в\s+{re.escape(city_name)}', '', clean_name)
+                clean_name = re.sub(rf'(?i)\s+{re.escape(city_name)}$', '', clean_name).strip()
+
+                if target_names:
+                    matched = False
                     for target in target_names:
-                        if target.lower() in store_real_name.lower():
-                            found_stores[store_slug] = store_real_name
+                        if target.lower() in clean_name.lower() or target.lower() in raw_name.lower():
+                            found_stores[store_slug] = target
+                            matched = True
                             break
+                    if not matched:
+                        continue
+                else:
+                    found_stores[store_slug] = clean_name
+
     return found_stores
 
-
 def parse_search_results(html, store_name):
-    """Парсит список товаров из поиска"""
     soup = BeautifulSoup(html, "lxml")
     items = []
 
     if "Ничего не найдено" in soup.text:
         return []
 
-    for s in soup.find_all("div", class_="strip"):
+    cards = soup.find_all("div", class_="strip")
+    if not cards:
+        cards = soup.find_all("div", class_="item")
+
+    for s in cards:
         try:
             t_tag = s.find("div", class_="item_title")
             name = t_tag.find("h3").text.strip() if t_tag and t_tag.find("h3") else "Unknown"
@@ -86,9 +91,7 @@ def parse_search_results(html, store_name):
             continue
     return items
 
-
 def parse_product_details(html, name_fallback):
-    """Парсит детальную страницу товара (характеристики, точная цена, категория)"""
     soup = BeautifulSoup(html, "lxml")
     specs = {}
 

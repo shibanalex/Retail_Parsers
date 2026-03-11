@@ -1,2 +1,3 @@
-2026/03/07-14:55:39.157 dd4 Creating DB c:\Users\1\Desktop\Retail_Parsers-main\cataloged_parser\cataloged_profile\Default\IndexedDB\https_www.cataloged.ru_0.indexeddb.leveldb since it was missing.
-2026/03/07-14:55:39.160 dd4 Reusing MANIFEST c:\Users\1\Desktop\Retail_Parsers-main\cataloged_parser\cataloged_profile\Default\IndexedDB\https_www.cataloged.ru_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/11-14:15:06.128 282c Reusing MANIFEST c:\Users\1\Desktop\Retail_Parsers-main\cataloged_parser\cataloged_profile\Default\IndexedDB\https_www.cataloged.ru_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/11-14:15:06.128 282c Recovering log #3
+2026/03/11-14:15:06.129 282c Reusing old log c:\Users\1\Desktop\Retail_Parsers-main\cataloged_parser\cataloged_profile\Default\IndexedDB\https_www.cataloged.ru_0.indexeddb.leveldb/000003.log 

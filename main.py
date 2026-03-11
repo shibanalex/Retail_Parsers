@@ -29,7 +29,7 @@ uc.Chrome.__del__ = _patched_del
 #from kib_parser import kib
 #from chizhik_parser import chizhik
 #from spar_parser import spar
-#from pyaterochka_parser import pyaterochka
+from pyaterochka_parser import pyaterochka
 #from riat_parser import riat
 #from smart_parser import smart
 #from dixy_parser import dixy
@@ -38,7 +38,7 @@ uc.Chrome.__del__ = _patched_del
 #from globus_parser import globus
 #from svetofor_parser import svetofor
 #from magazinnoff_parser import magazinnoff
-from cataloged_parser import cataloged
+#from cataloged_parser import cataloged
 
 from parsers_core.utils import write_excel
 from config import table_name, parsers #, TelegramBot
@@ -64,7 +64,7 @@ parsers_funcs = {
 #    "https://bristol.ru/": bristol,
 #    "https://chizhik.club/": chizhik,
 #    "https://myspar.ru/": spar,
-#    "https://5ka.ru/": pyaterochka,
+    "https://5ka.ru/": pyaterochka,
 #    "https://krasnoeibeloe.ru/": kib,
 #    "https://svetoforonline.ru/": svetofor,
 #    "https://vliga.com": vliga,
@@ -73,7 +73,7 @@ parsers_funcs = {
 #    "https://maxi-retail.ru/": maxi,
 #    "https://dixy.ru/": dixy,
 #    "https://www.magazinnoff.ru/": magazinnoff,
-    "https://www.cataloged.ru/": cataloged,
+#    "https://www.cataloged.ru/": cataloged,
 }
 
 def write_log(message, filename):

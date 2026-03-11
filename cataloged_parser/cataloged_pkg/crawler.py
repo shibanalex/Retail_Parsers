@@ -4,7 +4,8 @@ import config
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from parsers_core.utils import update_retail_points
-from .browser import init_driver, wait_for_antibot
+from .browser import init_driver
+from parsers_core.captcha_bypass import bypass_cataloged_antibot
 from .html_parser import transliterate_city, parse_shops_list, parse_products_page, get_max_page, get_category_from_html
 
 PARSER_NAME = "Cataloged"
@@ -84,7 +85,7 @@ def run_collection():
         for city in cities:
             slug = transliterate_city(city)
             driver.get(f"https://www.cataloged.ru/gorod/{slug}/")
-            wait_for_antibot(driver)
+            bypass_cataloged_antibot(driver) 
             
             shops = parse_shops_list(driver.page_source, targets)
             city_total = 0
@@ -93,7 +94,7 @@ def run_collection():
                 print(f"   🏪 {shop_name}")
                 base_url = shop_url.rstrip('/') + "/?filter=produkty"
                 driver.get(base_url)
-                wait_for_antibot(driver)
+                bypass_cataloged_antibot(driver) 
                 
                 max_p = get_max_page(driver.page_source)
                 print(f"      📄 Страниц: {max_p}")

@@ -1,12 +1,14 @@
+import os
 import time
 import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Optional, Any, Iterator
+from typing import Optional, Any
 from contextlib import contextmanager
 import undetected_chromedriver as uc
 
+from parsers_core.captcha_bypass import bypass_pyaterochka_antibot
 
 def get_chrome_binary(*args, **kwargs) -> Optional[str]:
     for name in ("google-chrome", "chromium", "chromium-browser", "chrome"):
@@ -14,40 +16,55 @@ def get_chrome_binary(*args, **kwargs) -> Optional[str]:
         if path: return path
     return None
 
-
 def detect_chrome_version_main(*args, **kwargs) -> Optional[int]:
     return None
 
-
 def is_forbidden_ban(text):
     return "Access denied" in text or "Forbidden" in text
-
 
 @contextmanager
 def local_proxy_for(proxy):
     yield proxy, None
 
-
 def _init_uc_driver(headless: bool, locale: str, proxy: Optional[str]):
-    """Эта функция создает сам браузер. Ее ищет ваш get_items_data.py"""
+    """Создает браузер с привязкой профиля для сохранения кук и обхода защит"""
     options = uc.ChromeOptions()
+    
+    #СОХРАНЕНИЕ ПРОФИЛЯ (КРИТИЧНО ДЛЯ ОБХОДА КАПЧИ)
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parser_root = os.path.dirname(current_dir)
+    profile_dir = os.path.join(parser_root, "pyaterochka_profile")
+    options.add_argument(f"--user-data-dir={profile_dir}")
+    
+
     options.add_argument(f"--lang={locale}")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-popup-blocking")
+    options.add_argument("--disable-blink-features=AutomationControlled")
 
-    # Пытаемся найти хром автоматически
+    if proxy:
+        options.add_argument(f"--proxy-server={proxy}")
+
     chrome_path = get_chrome_binary()
 
-    driver = uc.Chrome(
-        options=options,
-        headless=headless,
-        use_subprocess=True,
-        browser_executable_path=chrome_path,
-        version_main = 145
-    )
+    try:
+        driver = uc.Chrome(
+            options=options,
+            headless=headless,
+            use_subprocess=True,
+            browser_executable_path=chrome_path,
+            version_main=145
+        )
+    except:
+        driver = uc.Chrome(
+            options=options,
+            headless=headless,
+            use_subprocess=True,
+            browser_executable_path=chrome_path
+        )
+        
     return driver
-
-
 
 def driver_get_json(driver, url: str, params: Optional[dict] = None, timeout_s: float = 15.0) -> Any:
     from urllib.parse import urlencode
@@ -56,26 +73,26 @@ def driver_get_json(driver, url: str, params: Optional[dict] = None, timeout_s: 
         full_url += "?" + urlencode(params)
 
     driver.get(full_url)
-    time.sleep(1)  # Небольшая пауза для прогрузки
+    time.sleep(1)  
 
     try:
         text = driver.find_element("tag name", "body").text
         return json.loads(text)
     except Exception as e:
-        # Если это не JSON, возможно там бан или ошибка
         if is_forbidden_ban(driver.page_source):
             raise RuntimeError("IP_BANNED: Доступ к Пятерочке ограничен.")
         return {}
-
 
 @contextmanager
 def pyaterochka_driver(headless: bool = False, locale: str = "ru-RU", proxy: Optional[str] = None,
                        startup_timeout_s: float = 60.0):
     driver = _init_uc_driver(headless=headless, locale=locale, proxy=proxy)
     try:
-        # Прогрев: заходим на главную
         driver.get("https://5ka.ru/")
-        time.sleep(3)
+        
+        # ! ВЫЗОВ ОБХОДА КАПЧИ !
+        bypass_pyaterochka_antibot(driver, timeout=startup_timeout_s)
+        
         yield driver
     finally:
         try:
@@ -83,10 +100,8 @@ def pyaterochka_driver(headless: bool = False, locale: str = "ru-RU", proxy: Opt
         except:
             pass
 
-
 @contextmanager
 def pyaterochka_requests_session(*args, **kwargs):
-    """Заглушка для сессии (если она понадобится)"""
     import requests
     session = requests.Session()
     try:
@@ -94,12 +109,6 @@ def pyaterochka_requests_session(*args, **kwargs):
     finally:
         session.close()
 
-
-# Дополнительные функции
 def _get_chrome_binary(*args, **kwargs): return get_chrome_binary()
-
-
 def _detect_version_main(*args, **kwargs): return None
-
-
 def _get_cache_dir(*args, **kwargs): return Path(tempfile.gettempdir())

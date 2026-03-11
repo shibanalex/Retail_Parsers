@@ -4,6 +4,7 @@ import time
 import random
 import os
 from pyaterochka_parser.settings import retail
+from parsers_core.captcha_bypass import bypass_pyaterochka_antibot
 from config import (
     search_req,
     brand,
@@ -22,7 +23,7 @@ _MAX_SESSION_RECOVERIES = 2
 
 
 _QUICK_MODE = os.getenv("PYATEROCHKA_QUICK", "").strip() in {"1", "true", "yes"}
-_SLEEP_MIN, _SLEEP_MAX = ((0.05, 0.15) if _QUICK_MODE else (0.7, 2.0))
+_SLEEP_MIN, _SLEEP_MAX = ((0.05, 0.15) if _QUICK_MODE else (0.9, 2.0))
 _RETRY_SLEEP_MIN, _RETRY_SLEEP_MAX = ((1.0, 2.0) if _QUICK_MODE else (10.0, 20.0))
 
 # Глобальный индекс текущего прокси для ротации
@@ -138,9 +139,10 @@ def _recreate_driver(old_driver, proxy_url, old_proxy_proc=None, old_proxy_ctx=N
     # Navigate to the site so cookies / antibot context is established
     try:
         new_driver.get("https://5ka.ru/")
+        bypass_pyaterochka_antibot(new_driver, timeout=30)
     except Exception:
         pass
-    time.sleep(random.uniform(2, 4))
+        
     print("Браузер пересоздан, продолжаем парсинг.")
     return new_driver, proxy_proc, proxy_ctx
 

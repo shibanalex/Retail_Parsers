@@ -1,15 +1,44 @@
 import time
 import traceback
 import config
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from parsers_core.utils import update_retail_points
-from .browser import init_driver, wait_for_humanity, save_debug_html
+from .browser import init_driver, save_debug_html
+from parsers_core.captcha_bypass import bypass_cloudflare_humanity
 from .html_parser import transliterate_city, parse_stores, parse_search_results, parse_product_details
 
 BASE_URL = "https://www.magazinnoff.ru"
+
+def get_details_in_tab(driver, link, fallback_name):
+    brand, weight, volume, exact_price, category = None, None, None, None, None
+    if not link: 
+        return brand, weight, volume, exact_price, category
+
+    original_window = driver.current_window_handle
+    try:
+        driver.execute_script("window.open(arguments[0], '_blank');", link)
+        time.sleep(1)
+        
+        new_window = [w for w in driver.window_handles if w != original_window][0]
+        driver.switch_to.window(new_window)
+        
+        bypass_cloudflare_humanity(driver, timeout=5)
+        brand, weight, volume, exact_price, category = parse_product_details(driver.page_source, fallback_name)
+    except Exception:
+        pass
+    finally:
+        try:
+            if len(driver.window_handles) > 1:
+                driver.close()
+            driver.switch_to.window(original_window)
+        except:
+            pass
+
+    return brand, weight, volume, exact_price, category
 
 def run_collection():
     cities = getattr(config, 'cities', [])
@@ -29,31 +58,34 @@ def run_collection():
         queries = list(set(products + brands))
 
     if not cities or not queries:
-        print("⚠️ Нет городов или запросов в config.py")
         return []
 
     driver = init_driver(headless=False)
     all_results = []
 
     try:
-        print("🌐 Браузер запущен. Переход на главную...")
-        driver.get(BASE_URL)
-        wait_for_humanity(driver)
+        try:
+            driver.get(BASE_URL)
+            bypass_cloudflare_humanity(driver)
+
+        except TimeoutException:
+            pass
 
         for city in cities:
             slug = transliterate_city(city)
             city_url = f"{BASE_URL}/category/produkty/city/{slug}"
             
             print(f"🏙️ Город: {city}")
-            driver.get(city_url)
+            try:
+                driver.get(city_url)
+            except TimeoutException:
+                continue
             
-            if not wait_for_humanity(driver):
+            if not bypass_cloudflare_humanity(driver):
                 continue
 
-            stores_map = parse_stores(driver.page_source, targets)
-            
+            stores_map = parse_stores(driver.page_source, city, targets)
             if not stores_map:
-                print(f"⚠️ Магазины не найдены в {city}")
                 continue
             
             city_total_items = 0
@@ -64,7 +96,12 @@ def run_collection():
                 for q in queries:
                     try:
                         shop_url = f"{BASE_URL}/magazin/{s_slug}/c/{slug}"
-                        driver.get(shop_url)
+                        
+                        try:
+                            driver.get(shop_url)
+                        except TimeoutException:
+                            continue
+                            
                         time.sleep(1.5)
 
                         js_search = f"""
@@ -86,24 +123,19 @@ def run_collection():
                         except:
                             pass
 
-                        wait_for_humanity(driver, timeout=10)
+                        bypass_cloudflare_humanity(driver, timeout=10)
+                        
+                        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                        time.sleep(2)
 
                         items_list = parse_search_results(driver.page_source, s_name)
                         if items_list:
-                            print(f"    🔎 [{q}]: {len(items_list)} шт.")
+                            print(f"    🔎 [{q}]: Найдено {len(items_list)} шт.")
 
                         for item in items_list:
-                            brand, weight, volume, exact_price, category = None, None, None, None, None
-                            
-                            if item.get('link'):
-                                try:
-                                    driver.get(item['link'])
-                                    wait_for_humanity(driver, timeout=5)
-                                    brand, weight, volume, exact_price, category = parse_product_details(
-                                        driver.page_source, item['name']
-                                    )
-                                except Exception:
-                                    pass
+                            brand, weight, volume, exact_price, category = get_details_in_tab(
+                                driver, item.get('link'), item['name']
+                            )
 
                             final_price = exact_price if exact_price else item['price']
 
@@ -122,10 +154,7 @@ def run_collection():
                                 "Объем": volume,
                                 "Вес": weight,
                                 "Остаток": None,
-                                "Категория": category,
-                                "Дата": time.strftime('%Y-%m-%d'),
-                                "Время": time.strftime('%H:%M:%S'),
-                                "Парсер": PARSER_NAME
+                                "Категория": category
                             }
                             all_results.append(record)
                             city_total_items += 1
@@ -133,10 +162,9 @@ def run_collection():
                     except Exception:
                         continue
             
-            update_retail_points("Magazinnoff", city, city_total_items)
+            update_retail_points(PARSER_NAME, city, city_total_items)
 
     except Exception as e:
-        print(f"❌ Ошибка коллектора Magazinnoff: {e}")
         traceback.print_exc()
     finally:
         if driver:

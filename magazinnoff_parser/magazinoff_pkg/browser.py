@@ -6,31 +6,36 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
-
 parser_root = os.path.dirname(current_dir)
-
 PROFILE_DIR = os.path.join(parser_root, "magazinnoff_profile")
-
 
 def init_driver(headless=False):
     print(f"🌐 Профиль Chrome: {PROFILE_DIR}")
     
     options = webdriver.ChromeOptions()
-    options.add_argument(f"--user-data-dir={PROFILE_DIR}") # Путь к профилю
-    
+    options.add_argument(f"--user-data-dir={PROFILE_DIR}")
     options.add_argument("--start-maximized")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-popup-blocking")
     
+    # Подавление системного мусора в консоли
+    options.add_argument("--log-level=3")      
+    options.add_argument("--disable-logging")  
+    options.add_argument("--disable-features=OptimizationGuideModelDownloading,OptimizationHints")
+
+    # Ускорение: не ждем полной загрузки тяжелых скриптов
+    options.page_load_strategy = 'eager'
+    
     if headless:
         options.add_argument("--headless=new")
 
     try:
         driver = webdriver.Chrome(options=options)
+        # Жесткий таймаут на загрузку страницы
+        driver.set_page_load_timeout(30)
     except Exception as e:
         print(f"❌ Не удалось запустить драйвер: {e}")
         raise e
@@ -45,20 +50,6 @@ def init_driver(headless=False):
     )
     return driver
 
-def wait_for_humanity(driver, timeout=30):
-    """Ожидание прохождения защиты Cloudflare/AntiBot"""
-    try:
-        WebDriverWait(driver, timeout).until(
-            lambda d: "Just a moment" not in d.title and 
-                      "Checking your browser" not in d.page_source
-        )
-        WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "a[href*='/magazin/'], footer"))
-        )
-        time.sleep(1)
-        return True
-    except Exception:
-        return False
 
 def save_debug_html(driver, name_prefix):
     debug_dir = os.path.join(parser_root, "debug")

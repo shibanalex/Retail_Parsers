@@ -72,6 +72,7 @@ def parse_products_page(html):
             link = link_tag['href'] if link_tag else None
             if link and not link.startswith("http"): link = BASE_URL + link
             
+            # --- Парсинг цен ---
             price = None
             old_price = None
             
@@ -80,6 +81,9 @@ def parse_products_page(html):
                 price = _clean_price(price_div.get_text())
                 
             prev_div = card.find("p", class_="rec__item--price--prev")
+            if prev_div:
+                old_price = _clean_price(prev_div.get_text())
+            # --------------------
             
             img_tag = card.find("img", class_="rec__item--img")
             img = img_tag.get("src") if img_tag else None
